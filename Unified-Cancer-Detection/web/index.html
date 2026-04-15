@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unified Cancer Diagnostic Suite</title>
+    <!-- Modern Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-overlay"></div>
+    <div class="container">
+        
+        <header class="app-header">
+            <div class="logo">🧬</div>
+            <div>
+                <h1>Unified Breast Cancer Diagnostic Suite</h1>
+                <p>High-Precision Clinical Model Comparison (ResNet50 & VGG16)</p>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" id="tab-diagnostic" onclick="switchTab('diagnostic')">Diagnostic Hub</button>
+            <button class="tab-btn" id="tab-analytics" onclick="switchTab('analytics')">Analytics Tracker</button>
+        </nav>
+
+        <main id="view-diagnostic" class="view active">
+            <!-- Upload Section -->
+            <section class="upload-section glass-card">
+                <h2>Import Histopathology Scan</h2>
+                <div class="upload-zone" id="drop-zone">
+                    <p>Drag & Drop scan image (JPG/PNG)</p>
+                    <p>or</p>
+                    <label for="file-input" class="btn-primary">Browse Files</label>
+                    <input type="file" id="file-input" accept="image/jpeg, image/png" hidden>
+                </div>
+                
+                <!-- Display selected image name & Ground Truth input -->
+                <div class="upload-details hidden" id="upload-details">
+                    <p id="file-name" class="file-name-display"></p>
+                    <div class="input-group">
+                        <label for="ground-truth">Ground Truth (0: Benign, 1: Malignant) [Optional]:</label>
+                        <select id="ground-truth">
+                            <option value="">-- Select --</option>
+                            <option value="0">0 - Benign</option>
+                            <option value="1">1 - Malignant</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary run-inference-btn" onclick="runInference()">Run Inference via Ensemble</button>
+                </div>
+            </section>
+
+            <!-- Loading Spinner -->
+            <div id="loader" class="loader-container hidden">
+                <div class="spinner"></div>
+                <p>Models are analyzing...</p>
+            </div>
+
+            <!-- Results Section -->
+            <section id="results-section" class="results-section hidden">
+                <div class="consensus-banner glass-card" id="consensus-banner">
+                    <h3 id="consensus-title">Brain Diagnostics Synthesis</h3>
+                    <div class="consensus-metrics">
+                        <div class="metric">
+                            <span>Status</span>
+                            <strong id="final-status">Verification Required</strong>
+                        </div>
+                        <div class="metric">
+                            <span>Ensemble Malignancy Score</span>
+                            <strong id="ensemble-score">0.0%</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="model-cards">
+                    <!-- ResNet50 -->
+                    <div class="model-card glass-card">
+                        <div class="model-header resnet-theme">
+                            <h3>🟦 ResNet50 Prediction</h3>
+                        </div>
+                        <div class="model-body">
+                            <img id="resnet-img" src="" alt="ResNet50 Map" class="result-map">
+                            
+                            <div class="metric-row">
+                                <span>Tumor Burden / Malignancy</span>
+                                <span id="resnet-burden" class="highlight">0.00%</span>
+                            </div>
+                            <div class="metric-row">
+                                <span>Identified Regions</span>
+                                <span id="resnet-zones">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- VGG16 -->
+                    <div class="model-card glass-card">
+                        <div class="model-header vgg-theme">
+                            <h3>🟧 VGG16 Prediction</h3>
+                        </div>
+                        <div class="model-body">
+                            <img id="vgg-img" src="" alt="VGG16 Map" class="result-map">
+                            
+                            <div class="metric-row">
+                                <span>Tumor Burden / Malignancy</span>
+                                <span id="vgg-burden" class="highlight">0.00%</span>
+                            </div>
+                            <div class="metric-row">
+                                <span>Identified Regions</span>
+                                <span id="vgg-zones">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Conclusion Report Section -->
+            <section id="conclusion-section" class="conclusion-section hidden glass-card">
+                <h3>📋 Final Conclusion Report</h3>
+                <textarea id="conclusion-report" readonly style="width: 100%; height: 300px; padding: 1rem; border: 1px solid var(--glass-border); border-radius: 8px; background: rgba(30, 41, 59, 0.5); color: var(--text-primary); font-family: monospace;"></textarea>
+            </section>
+        </main>
+
+        <main id="view-analytics" class="view hidden glass-card">
+            <h2>Model Performance & Accuracy Tracking</h2>
+            <p>Real-time comparative performance monitoring between ResNet50 and VGG16 based on externally injected testing batches and ground-truth verified inferences.</p>
+            
+            <!-- Accuracy Test Button -->
+            <div class="accuracy-test-section">
+                <button class="btn-primary" onclick="runAccuracyTest()">Run Accuracy Test (100 Images)</button>
+                <div id="accuracy-status" class="status-message hidden"></div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="accuracyChart"></canvas>
+            </div>
+            
+            <div class="history-table-container">
+                <h3>📜 Recent Analysis History</h3>
+                <table class="glass-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Image</th>
+                            <th>ResNet Score</th>
+                            <th>VGG Score</th>
+                            <th>Ensemble Score</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

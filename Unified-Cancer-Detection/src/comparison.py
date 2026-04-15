@@ -6,8 +6,7 @@ import sys
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.inference_unified import run_unified_inference
-from utils.config import Config
+from src.ensemble_learning import generate_conclusion_report
 
 def compare_models(image_path):
     """
@@ -19,7 +18,7 @@ def compare_models(image_path):
     # 2. Run VGG16
     vgg_result = run_unified_inference(image_path, model_type="vgg16")
     
-    # 3. Calculate Insights
+    # Calculate Insights
     resnet_findings = resnet_result.get('findings', [])
     vgg_findings = vgg_result.get('findings', [])
     
@@ -29,6 +28,22 @@ def compare_models(image_path):
     
     consensus = "Agreement" if resnet_present == vgg_present else "Discrepancy"
     
+    # Calculate ensemble score
+    resnet_ratio = resnet_result.get('overall_ratio', 0)
+    vgg_ratio = vgg_result.get('overall_ratio', 0)
+    ensemble_score = (resnet_ratio + vgg_ratio) / 2.0
+    
+    # Determine status
+    if ensemble_score > 0.05:
+        status = "Malignant"
+    elif ensemble_score <= 0.01:
+        status = "Benign"
+    else:
+        status = "Needs Review"
+    
+    # Generate conclusion report
+    conclusion = generate_conclusion_report(resnet_result, vgg_result, ensemble_score, status)
+    
     # Log to CSV
     log_data = {
         'Timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -36,8 +51,8 @@ def compare_models(image_path):
         'ResNet_Tumors': len(resnet_findings),
         'VGG_Tumors': len(vgg_findings),
         'Consensus': consensus,
-        'ResNet_Ratio': f"{resnet_result.get('overall_ratio', 0):.4f}",
-        'VGG_Ratio': f"{vgg_result.get('overall_ratio', 0):.4f}"
+        'ResNet_Ratio': f"{resnet_ratio:.4f}",
+        'VGG_Ratio': f"{vgg_ratio:.4f}"
     }
     
     os.makedirs(Config.RESULTS_DIR, exist_ok=True)
@@ -52,6 +67,11 @@ def compare_models(image_path):
         'resnet': resnet_result,
         'vgg': vgg_result,
         'consensus': consensus,
+        'ensemble': {
+            'score': ensemble_score,
+            'status': status,
+            'conclusion_report': conclusion
+        },
         'log_path': Config.COMPARISON_LOG
     }
 

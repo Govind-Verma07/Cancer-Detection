@@ -63,6 +63,16 @@ st.sidebar.image("https://img.icons8.com/clouds/100/000000/microscope.png", widt
 st.sidebar.title("Control Panel")
 uploaded_file = st.sidebar.file_uploader("Upload Histopathology Scan", type=["jpg", "png", "jpeg", "tif", "tiff"])
 
+# Accuracy Test Button
+if st.sidebar.button("Run Accuracy Test (100 Images)"):
+    with st.spinner("Running accuracy test on 100 images..."):
+        try:
+            from accuracy_test import run_accuracy_test
+            run_accuracy_test(num_images=100)
+            st.sidebar.success("Accuracy test completed!")
+        except Exception as e:
+            st.sidebar.error(f"Error: {e}")
+
 if uploaded_file:
     # Save temp file
     os.makedirs("results", exist_ok=True)
@@ -79,39 +89,53 @@ if uploaded_file:
     resnet = results['resnet']
     vgg = results['vgg']
     
+    # Load images for display
+    resnet_img_path = resnet.get('output_path')
+    vgg_img_path = vgg.get('output_path')
+    
     # Results Dashboard
     col1, col2 = st.columns(2)
     
     import io
-    def img_to_bytes(img_array):
-        img_pil = Image.fromarray(img_array)
+    def load_image_from_path(img_path):
+        if img_path and os.path.exists(img_path):
+            return Image.open(img_path)
+        return None
+    
+    def img_to_bytes(img):
+        if img is None:
+            return None
         buf = io.BytesIO()
-        img_pil.save(buf, format="JPEG")
+        img.save(buf, format="JPEG")
         return buf.getvalue()
     
     with col1:
         st.markdown(f"### 🟦 ResNet50 Prediction")
-        st.image(resnet['visual_result'], caption="Segmentation & Classification Map", use_container_width=True)
-        st.download_button(
-            label="💾 Download ResNet Prediction",
-            data=img_to_bytes(resnet['visual_result']),
-            file_name="resnet_prediction.jpg",
-            mime="image/jpeg"
-        )
-        st.markdown(f"**Tumor Burden Index:** `{resnet['overall_ratio']:.4f}`")
-        st.markdown(f"**Identified Zones:** `{len(resnet['findings'])}`")
+        resnet_img = load_image_from_path(resnet_img_path)
+        if resnet_img:
+            st.image(resnet_img, caption="Segmentation & Classification Map", use_container_width=True)
+            st.download_button(
+                label="💾 Download ResNet Prediction",
+                data=img_to_bytes(resnet_img),
+                file_name="resnet_prediction.jpg",
+                mime="image/jpeg"
+            )
+        st.markdown(f"**Tumor Burden Index:** `{resnet.get('overall_ratio', 0):.4f}`")
+        st.markdown(f"**Identified Zones:** `{len(resnet.get('findings', []))}`")
         
     with col2:
         st.markdown(f"### 🟧 VGG16 Prediction")
-        st.image(vgg['visual_result'], caption="Segmentation & Classification Map", use_container_width=True)
-        st.download_button(
-            label="💾 Download VGG16 Prediction",
-            data=img_to_bytes(vgg['visual_result']),
-            file_name="vgg_prediction.jpg",
-            mime="image/jpeg"
-        )
-        st.markdown(f"**Tumor Burden Index:** `{vgg['overall_ratio']:.4f}`")
-        st.markdown(f"**Identified Zones:** `{len(vgg['findings'])}`")
+        vgg_img = load_image_from_path(vgg_img_path)
+        if vgg_img:
+            st.image(vgg_img, caption="Segmentation & Classification Map", use_container_width=True)
+            st.download_button(
+                label="💾 Download VGG16 Prediction",
+                data=img_to_bytes(vgg_img),
+                file_name="vgg_prediction.jpg",
+                mime="image/jpeg"
+            )
+        st.markdown(f"**Tumor Burden Index:** `{vgg.get('overall_ratio', 0):.4f}`")
+        st.markdown(f"**Identified Zones:** `{len(vgg.get('findings', []))}`")
         
     st.divider()
     
@@ -120,21 +144,28 @@ if uploaded_file:
     c1, c2, c3 = st.columns(3)
     
     # Determine consensus color
-    consensus_color = "green" if results['consensus'] == "Agreement" else "orange"
+    consensus = results.get('consensus', 'Unknown')
+    consensus_color = "green" if consensus == "Agreement" else "orange"
     
     with c1:
-        st.metric("Model Consensus", results['consensus'])
+        st.metric("Model Consensus", consensus)
     with c2:
-        avg_area = (resnet['overall_ratio'] + vgg['overall_ratio']) / 2
+        avg_area = (resnet.get('overall_ratio', 0) + vgg.get('overall_ratio', 0)) / 2
         st.metric("Mean Tumor Area", f"{avg_area:.4f}")
     with c3:
         # Recommendation logic: if they disagree, highlight the one with higher detection area (more conservative)
-        if results['consensus'] == "Discrepancy":
+        if consensus == "Discrepancy":
             rec = "Verification Required"
         else:
             rec = "Consolidated Report"
         st.metric("Clinical Status", rec)
-
+    
+    # Conclusion Report
+    st.header("📋 Final Conclusion Report")
+    ensemble = results.get('ensemble', {})
+    conclusion = ensemble.get('conclusion_report', 'No conclusion available')
+    st.text_area("Diagnostic Report", conclusion, height=300, disabled=True)
+    
     # Detailed Metrics Table
     with st.expander("📂 View Component Analysis Details", expanded=True):
         findings_data = []

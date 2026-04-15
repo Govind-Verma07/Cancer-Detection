@@ -1,0 +1,68 @@
+# Unified Cancer Detection Project - Specific Ignores
+
+# Virtual Environment
+venv_cuda/
+venv*/
+.venv*/
+env*/
+ENV*/
+
+# Generated Results & Logs
+results/
+*.log
+comparison_log.csv
+accuracy_log.csv
+trained_images_log.txt
+
+# Training Data & Media
+media/Pixel-level annotation/
+media/ROI Masks/
+media/TIFF Images/
+media/*training*/
+media/*test*/
+media/*validation*/
+
+# Model Weights (already covered by root .gitignore but explicit here)
+*.pth
+*.h5
+*.pt
+*.weights
+
+# Temporary Files
+temp/
+tmp/
+api_upload.jpg
+smoke_test.jpg
+*_upload.*
+*_temp.*
+
+# Cache & Build
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.cache/
+.pytest_cache/
+
+# IDE & Development
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Generated Documentation
+*.md.bak
+*.txt.bak
+
+# Test Outputs
+test_*.txt
+test_*.out
+test_*.err
+*_err.txt
+*_out.txt
+*_output.txt

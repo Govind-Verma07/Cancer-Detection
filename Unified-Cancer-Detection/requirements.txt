@@ -1,0 +1,13 @@
+torch
+torchvision
+opencv-python-headless
+numpy
+pillow
+pandas
+fastapi
+uvicorn
+jinja2
+python-multipart
+# Added for metrics/analytics
+matplotlib
+scikit-learn

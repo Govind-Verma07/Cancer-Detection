@@ -11,11 +11,11 @@ def load_model(model_or_class, model_path, device="cpu"):
     if os.path.exists(model_path):
         try:
             model.load_state_dict(torch.load(model_path, map_location=device))
-            print(f"✅ Loaded weights from {model_path}")
+            print("[OK] Loaded weights from " + model_path)
         except Exception as e:
-            print(f"⚠️ Error loading weights from {model_path}: {e}")
+            print("[WARN] Error loading weights from " + model_path + ": " + str(e))
     else:
-        print(f"Warning: Model path {model_path} not found. Using uninitialized weights.")
+        print("[WARN] Model path not found, using random weights: " + model_path)
     
     model.to(device)
     model.eval()
