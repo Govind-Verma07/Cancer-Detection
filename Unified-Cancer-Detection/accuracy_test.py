@@ -20,6 +20,28 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from resnet50.inference import run_resnet50_inference
 from vgg16.inference import run_vgg16_inference
 from utils.config import Config
+import csv
+
+RESULTS_FILE = os.path.join(Config.RESULTS_DIR, "accuracy_test_results.csv")
+RESULT_FIELDNAMES = [
+    'filename', 'resnet_iou', 'resnet_dice', 'resnet_precision', 'resnet_recall',
+    'vgg_iou', 'vgg_dice', 'vgg_precision', 'vgg_recall'
+]
+
+
+def ensure_results_file(path):
+    os.makedirs(Config.RESULTS_DIR, exist_ok=True)
+    if not os.path.exists(path):
+        with open(path, 'w', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=RESULT_FIELDNAMES)
+            writer.writeheader()
+
+
+def append_result_row(path, row):
+    with open(path, 'a', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=RESULT_FIELDNAMES)
+        writer.writerow(row)
+
 
 def load_ground_truth_mask(mask_path):
     """
@@ -69,9 +91,10 @@ def calculate_metrics(pred_mask, gt_mask):
         'recall': recall
     }
 
-def run_accuracy_test(num_images=100):
+def run_accuracy_test(num_images=100, status_callback=None):
     """
     Run accuracy testing on up to num_images that have ground truth.
+    Results are appended one row at a time to the CSV for live updating.
     """
     tiff_dir = os.path.join(Config.PROJECT_ROOT, "media", "TIFF Images")
     mask_dir = os.path.join(Config.PROJECT_ROOT, "media", "Pixel-level annotation", "Pixel-level annotation")
@@ -89,6 +112,10 @@ def run_accuracy_test(num_images=100):
     selected_files = common_files[:num_images]
     
     results = []
+    output_path = RESULTS_FILE
+    if os.path.exists(output_path):
+        os.remove(output_path)
+    ensure_results_file(output_path)
     
     print(f"Running accuracy test on {len(selected_files)} images...")
     
@@ -105,6 +132,8 @@ def run_accuracy_test(num_images=100):
         # Load GT
         gt_mask = load_ground_truth_mask(mask_path)
         if gt_mask is None:
+            if status_callback:
+                status_callback(i + 1, len(selected_files), fname, message="Missing ground truth")
             continue
         
         # Get predicted masks
@@ -113,6 +142,8 @@ def run_accuracy_test(num_images=100):
         
         if pred_resnet is None or pred_vgg is None:
             print(f"Skipping {fname}: No prediction masks")
+            if status_callback:
+                status_callback(i + 1, len(selected_files), fname, message="No prediction masks")
             continue
         
         # Calculate metrics
@@ -131,20 +162,21 @@ def run_accuracy_test(num_images=100):
             'vgg_recall': vgg_metrics['recall']
         }
         results.append(result)
+        append_result_row(output_path, result)
+        
+        if status_callback:
+            status_callback(i + 1, len(selected_files), fname)
     
-    # Save results
+    # Generate plots from the final result set
     df = pd.DataFrame(results)
-    output_path = os.path.join(Config.RESULTS_DIR, "accuracy_test_results.csv")
-    df.to_csv(output_path, index=False)
-    
-    # Generate plots
-    generate_accuracy_plots(df)
+    if not df.empty:
+        generate_accuracy_plots(df)
     
     print(f"Accuracy test complete. Results saved to {output_path}")
     
-    # Print summary
-    print("\nSummary Statistics:")
-    print(df.describe())
+    if not df.empty:
+        print("\nSummary Statistics:")
+        print(df.describe())
 
 def generate_accuracy_plots(df):
     """

@@ -83,6 +83,7 @@
                         </div>
                         <div class="model-body">
                             <img id="resnet-img" src="" alt="ResNet50 Map" class="result-map">
+                            <button class="btn-primary" onclick="downloadImage('resnet')" style="margin-top: 0.5rem; width: 100%;">⬇️ Download ResNet50</button>
                             
                             <div class="metric-row">
                                 <span>Tumor Burden / Malignancy</span>
@@ -102,6 +103,7 @@
                         </div>
                         <div class="model-body">
                             <img id="vgg-img" src="" alt="VGG16 Map" class="result-map">
+                            <button class="btn-primary" onclick="downloadImage('vgg')" style="margin-top: 0.5rem; width: 100%;">⬇️ Download VGG16</button>
                             
                             <div class="metric-row">
                                 <span>Tumor Burden / Malignancy</span>
@@ -118,7 +120,10 @@
             
             <!-- Conclusion Report Section -->
             <section id="conclusion-section" class="conclusion-section hidden glass-card">
-                <h3>📋 Final Conclusion Report</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3>📋 Final Conclusion Report</h3>
+                    <button class="btn-primary" onclick="downloadReport()">⬇️ Download Report</button>
+                </div>
                 <textarea id="conclusion-report" readonly style="width: 100%; height: 300px; padding: 1rem; border: 1px solid var(--glass-border); border-radius: 8px; background: rgba(30, 41, 59, 0.5); color: var(--text-primary); font-family: monospace;"></textarea>
             </section>
         </main>
@@ -151,6 +156,27 @@
                         </tr>
                     </thead>
                     <tbody id="history-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="accuracy-test-results-container" class="history-table-container hidden">
+                <h3>📊 Accuracy Test Detail Results</h3>
+                <table class="glass-table">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>ResNet IoU</th>
+                            <th>VGG IoU</th>
+                            <th>ResNet Dice</th>
+                            <th>VGG Dice</th>
+                            <th>ResNet Precision</th>
+                            <th>VGG Precision</th>
+                            <th>ResNet Recall</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accuracy-test-body">
                         <!-- Populated by JS -->
                     </tbody>
                 </table>

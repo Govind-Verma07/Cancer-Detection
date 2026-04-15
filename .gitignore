@@ -20,7 +20,22 @@ build/
 *.egg
 MANIFEST
 
-# Media Files
+# Virtual Environments
+venv*/
+env*/
+ENV*/
+.venv*/
+venv_cuda/
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Media Files - All formats
 *.jpg
 *.jpeg
 *.png
@@ -28,6 +43,10 @@ MANIFEST
 *.svg
 *.webp
 *.ico
+*.bmp
+*.tiff
+*.tif
+*.raw
 *.mp4
 *.webm
 *.mov
@@ -39,15 +58,52 @@ MANIFEST
 *.flac
 *.ogg
 *.m4a
+*.pdf
+*.doc
+*.docx
 
 # Machine Learning Weights & Models
 *.h5
+*.hdf5
 *.pth
 *.pt
 *.weights
 *.pb
 *.onnx
 *.joblib
+*.pkl
+*.pickle
+*.sav
+*.model
+*.ckpt
+*.tflite
+
+# Training Data & Results
+results/
+data/
+logs/
+*.log
+*.csv
+*.json
+temp/
+tmp/
+.cache/
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 *.pickle
 *.pkl
 models/

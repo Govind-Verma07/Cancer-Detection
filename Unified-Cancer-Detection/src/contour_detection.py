@@ -17,7 +17,7 @@ def detect_contours(mask):
         perimeter = cv2.arcLength(cnt, True)
         
         # 1. Size Filter (Decreased sensitivity to filter out small artifacts/skin tissue)
-        if area < 1000: # Increased to 1000 to filter out artifacts
+        if area < 500:  # Lowered to catch smaller regions
             continue
             
         # 2. Shape Filter (Circularity & Solidity)
@@ -32,7 +32,7 @@ def detect_contours(mask):
         # Lumps are compact (high circularity/solidity), nerves are elongated (low)
         # BUGFIX: Malignant tumors are highly irregular (spiculate), so circularity/solidity can be extremely low!
         # Drastically relaxed geometric restrictions.
-        if circularity < 0.05 or solidity < 0.2:
+        if circularity < 0.02 or solidity < 0.1:  # Drastically relaxed thresholds
             continue
             
         x, y, w, h = cv2.boundingRect(cnt)

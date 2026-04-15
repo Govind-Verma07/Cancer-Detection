@@ -1,8 +1,0 @@
-﻿Testing VGG16 BreastCancerClassifier...
-Backbone is VGG: True
-Backbone classifier[6] is Identity: True
-Input shape: torch.Size([2, 3, 224, 224])
-Binary output shape: torch.Size([2, 2]) (Expected: [2, 2])
-Stage output shape: torch.Size([2, 4]) (Expected: [2, 4])
-
-SUCCESS: VGG16 model instantiated and forward pass completed successfully!
